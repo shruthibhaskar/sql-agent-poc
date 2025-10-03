@@ -1,0 +1,9 @@
+boto3==1.38
+fastapi==0.115
+langchain==0.3
+langgraph==0.5
+pydantic==2.11
+pydantic_core==2.33
+redis==6.2
+requests==2.32
+uvicorn==0.35

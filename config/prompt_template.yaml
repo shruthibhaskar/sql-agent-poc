@@ -1,0 +1,404 @@
+validate_ppap_prompt: |
+  You are an expert in Production Part Approval Process (PPAP) Package validation.
+
+  The PPAP Package can be of two types: VDA or AIAG.
+  A PPAP Package typically consists of 18 standard elements.
+
+  Your task is to analyze and validate the provided PPAP Package as follows:
+
+  1. Initial Verification:
+    - Verify if the input is a PPAP Package.
+    - If the package is not in English, translate it to English.
+    - If no PPAP elements are found, state "No PPAP content found" and do not proceed further.
+
+  2. PPAP Content Extraction and Identification:
+    - Identify the PPAP Standard used (VDA or AIAG).
+      - Key identifier: Deckblatt (VDA) or PSW (Part Submission Warrant) sheet (AIAG). 
+    - Extract and list all PPAP elements present in the package.
+
+  3. PPAP Content Validation:
+    - Compare the extracted content with standard PPAP elements.
+    - Identify missing PPAP elements.
+    - Identify missing or incorrect information within elements.
+    - Verify the actual presence of documents in the package.
+    - Do not rely solely on the cover sheet's listing; confirm each document's inclusion.
+
+  4. Consistency Check:
+    - Review each document for the following IDs:
+      - Part Number
+      - Revision Number
+      - PCN (Product Change Notification) Number
+      - Production Location
+      - Customer Part Number
+      - Customer Part Number Revision
+      - Drawing Number
+      - IMDS (International Material Data System) ID
+    - Match all these IDs across all pages. Highlight any inconsistencies or mismatches.
+    - Provide the document name and page number where any mismatch occurs.
+    - List the important IDs mentioned above from each PPAP element in the package.
+
+  5. Specific Document Checks:
+    a. Cover Sheet:
+        - Under 'Produkte / Prozesse' or 'Product / Process', check if each item is marked as available.
+        - Verify if marked documents are actually present in the package.
+        - If MDS report is in the package, verify the IMDS version ID with the MDS report.
+
+    b. Customer Drawing / CAD Drawing:
+        - Use as reference for TE Part Number, Customer Part Number, Revision Number, Drawing Number, etc.
+
+    c. Dimension Report:
+        - Verify all dimensions from the drawing are included in the Dimension report.
+        - Check if reported dimensions are within tolerance limits mentioned in the Customer Drawing.
+        - Highlight any missing dimensions.
+
+    d. SPC Document:
+        - Check the notes/Bemerkung mentioned in the drawing.
+        - Identify dimensions for machine capability study.
+        - Compare these with dimensions in the SPC document.
+        - Use the drawing referenced in the PPAP package for current comparison.
+
+    e. MDS Report:
+        - Verify IMDS version ID with the MDS report.
+
+    f. Process Flow Diagram:
+        - Check if Base Number matches the Customer Drawing.
+          Example: x-967640-y, where 967640 is the Base Number.
+
+    g. Supply Chain:
+        - Check data from Header.
+
+    h. Engineering Approval:
+        - Verify if EF Number matches the Cover Sheet.
+
+  6. Result Display:
+    - Provide a detailed summary of the PPAP Package in a structured table format with the following columns:
+      - PPAP Element: Name of the PPAP Element
+      - Status: Present/Missing
+      - Comments: Detailed findings for present elements or what is missing for absent elements
+    - Include in the Title section: Customer Name, PPAP Number, Date
+    - Provide sections for each of the above-mentioned checks
+    - List all PPAP components available in the input package, including those beyond the standard elements
+    - After the table, provide detailed comments on each row
+    - Format the table as follows:
+      - Use vibrant alternating row colors
+      - MUST use emoji as much as possible 
+      - Use a modern font
+      - Use a clean, professional layout
+      - Bold the first column
+      - Align numeric/percentage values to the right and include mini bar charts for percentage columns
+      - Use clear headers with distinct styling
+      - Use colorful bullets for lists inside cells
+      - Design should be modern, easy to read, and professional
+      - Use a consistent, visually appealing color scheme
+
+  7. Completion Score:
+    - Based on the findings, provide a completion score as a percentage for the PPAP Package.
+    - Calculate the score based on the presence and correctness of required elements.
+
+  Note: If the input is partial or corrupted, analyze the available content and clearly state any limitations in the analysis due to missing or unreadable information.
+
+  Input PPAP Package for validation:
+  $page_text
+
+
+part_history_prompt: |
+  Part History Report created from details present in Customer Drawing.
+  Your goal is to create Part History Report from Customer Drawing.
+
+  Process:
+  1. Document Identification:
+    1.1 Identify the customer drawing file (e.g., "BMW Drawing 1-2208461-3.pdf").
+    1.2 Locate and record the following from the title block:
+        a. Part number
+        b. Drawing number
+        c. Current revision level
+
+  2. Revision History Analysis:
+    2.1 Find the revision history table or section on the drawing.
+    2.2 For each revision entry, extract:
+        a. Revision letter (for "Index" and "Änderungsindex" columns)
+        b. Revision date (for "Zeichnungs Stand" column)
+        c. Description of changes (for "Art der Änderung" column)
+        d. TE revision number : column name inTE REV. mostly the first column.
+        
+  3. Additional Information:
+    3.1 Search for software version mentions (for "S/W" column).
+    3.2 Look for production or series start dates (for "Serienstart" column).
+    3.3 Identify any relevant notes or specifications related to revisions.
+
+  4. Table Creation and Population:
+    4.1 Create a table with columns: 
+        | Lfd. Nr | Index | Änderungsindex | Art der Änderung | Zeichnungs Stand | S/W | Serienstart |
+    4.2 Fill the table with data from steps 2 and 3.
+    4.3 Assign sequential "Lfd. Nr" starting from 1 for the oldest revision.
+    4.4 Use "N/A" for missing "S/W" or "Serienstart" information.
+
+  5. Cross-referencing with Part History Report:
+    5.1 Compare the created table with the existing Part History Report (if available).
+    5.2 Identify any discrepancies or additional information in the Part History Report.
+    5.3 Merge relevant information from both sources, prioritizing the customer drawing data.
+
+  6. Verification and Finalization:
+    6.1 Ensure all revisions from the drawing are included in the table.
+    6.2 Confirm the most recent revision matches the current drawing revision level.
+    6.3 Add explanatory notes for any assumptions or missing information.
+
+  7. Output:
+    7.1 Present the final Part History Report table.
+    7.2 Include any relevant notes or clarifications below the table.
+
+  Customer Drawing: $page_text
+
+supply_chain_prompt: |
+  Supply Chain Report created from details present in all 4 Input Sources.
+  Your goal is to create Supply Chain Report from Input Sources.
+
+  Output Supply Chain Report Structure:
+  Note the table must be have columns hould be first row.
+  The Supply Chain Report should be a table with the following columns:
+  1. TE / SEBN Artikelnummer / TE / SEBN Partnumber
+  2. Unterbaugruppe Tier 1 Artikelnummer /SUB ASSY supplier Tier 1 part number
+  3. TE Artikelnummer / TE Partnumber
+  4. OEM (Erstausrüster) Artikelnummer / OEM Partnumber
+  5. Zeichnung (OEM) // Drawing (OEM)
+  6. Hersteller / Lieferant + Produktionsstandort // Manufacturer / supplier + production location
+  7. DUNS-Nummer // DUNSnumber
+  8. Zeichungsdatum (OEM) / Revision // Drawing date (OEM) / Revision
+  9. OEM Freigabe Nummer (z.B. BMG / BMF) // OEM Approval Number
+  10. Genehmigungsdatum von OEM Freigabe // Approval Date from OEM Approval
+  11. TE CR Nummer / Number
+  12. TE CR Status
+  13. TE CR Datum / Date
+  14. PPF Tier 1 Freigabe // PPF Tier 1 release
+  15. PPF Datum / PPF Date
+  16. PPF Nummer (e-PPAP-Nr.) // PPF Number (e-PPAP-No)
+  17. PPF Nummer (Tier 1) // PPF Number (Tier 1)
+  18. Benotung / Note
+  19. Bemerkung / Comment
+  20. Datum der letzten Requalifikation / Date of the last Layout Inspection
+
+  Process:
+  1. Validate Document Consistency:
+    1.1. Check if "SEBN PART NO." exists in the Customer Drawing (CD).
+          - If missing, abort the Supply Chain Report creation.
+          - If present, proceed but do not include these values in the report.
+    1.2. Verify that the "Drawing Number" in CD matches the one in PD.
+          - In CD, the drawing number will be prefixed with "C-".
+          - If they don't match, note the discrepancy in the 'Bemerkung / Comment' column.
+
+  2. Extract Basic Part Information:
+    2.1. From all documents, identify and extract:
+          - Part numbers
+          - Descriptions
+          - Revisions
+    2.2. Locate OEM (VW) part numbers and drawing numbers.
+    2.3. Record any discrepancies between documents in the 'Bemerkung / Comment' column.
+
+  3. Manufacturer/Supplier Information:
+    3.1. Identify the manufacturer/supplier name.
+    3.2. Record the production location.
+    3.3. Extract the DUNS number.
+    3.4. Populate the "Hersteller / Lieferant + Produktionsstandort" and "DUNS-Nummer" columns.
+
+  4. Approval Information:
+    4.1. From BMG documents, extract:
+          - BMG numbers (VW#xxxxxx format)
+          - Approval dates
+    4.2. Populate "OEM Freigabe Nummer" and "Genehmigungsdatum von OEM Freigabe" columns.
+
+  5. Change Request (CR) Information:
+    5.1. Identify any CR numbers, statuses, and dates from the documents.
+    5.2. Populate "TE CR Nummer / Number", "TE CR Status", and "TE CR Datum / Date" columns.
+
+  6. Drawing Information:
+    6.1. From CD, extract the drawing date and revision.
+    6.2. Populate "Zeichungsdatum (OEM) / Revision" column.
+
+  7. Housing Part Numbers:
+    7.1. In CD, locate the table containing the keyword "Housing" in the Description column.
+    7.2. Extract the corresponding "VW Part No." from CD.
+    7.3. Find the matching part in PD and extract the "TE Part No."
+    7.4. Populate "TE Artikelnummer / TE Partnumber" and "OEM Artikelnummer / OEM Partnumber" columns.
+
+  8. V03 Numbers:
+    8.1. Extract V03 numbers from BMG documents.
+    8.2. Populate "OEM Artikelnummer / OEM Partnumber" column with these numbers.
+
+  9. TE/SEBN Part Numbers:
+    9.1. Extract TE/SEBN part numbers from PD or CD.
+    9.2. Populate "TE / SEBN Artikelnummer / TE / SEBN Partnumber" column.
+
+  10. Drawing Numbers:
+      10.1. Extract OEM drawing numbers from CD or BMG documents.
+      10.2. Populate "Zeichnung (OEM) // Drawing (OEM)" column.
+
+  11. Final Checks and Notes:
+      11.1. Ensure all mandatory fields are filled.
+      11.2. For any blank fields, provide explanations in the 'Bemerkung / Comment' column.
+      11.3. Note that PPF information and requalification dates are not available in the provided documents.
+
+  12. Data Consistency:
+      12.1. Cross-reference information between all documents to ensure consistency.
+      12.2. If discrepancies are found, note them in the 'Bemerkung / Comment' column.
+
+  13. Compliance and Ethics:
+      13.1. Ensure all data is accurately transcribed without alteration.
+      13.2. Do not infer or generate any information not explicitly present in the source documents.
+      13.3. If any required information is missing from all sources, clearly indicate this in the report.
+
+  14. Special Considerations:
+      14.1. For V03 numbers, note in the 'Bemerkung / Comment' column: "TE Pn not available, because the V03 numbers are a combination of plug and cable"
+      14.2. For fields related to PPF and requalification, if not found in documents, leave blank.
+      14.3. Use "N/A" for fields that are not applicable to certain parts.
+
+  15. Report Formatting:
+      15.1. Ensure the final report is in a tabular format as specified in the "Output Supply Chain Report Structure" section.
+      15.2. Use consistent formatting for dates, part numbers, and other standardized information.
+      15.3. Align column headers with the specified column names in both German and English.
+
+  Input Sources:
+    1. Production Drawing (PD): $cd_pdf
+    2. Customer Drawing (CD): $pd_pdf
+    3. BMG1: $ap_bmg
+    4. BMG2: $aq_bmg
+
+dim_cd_pd_prompt: |
+  Compare the Customer Drawing (CD) and Production Drawing (PD) and produce
+  1. A brief summary of your findings and observations.
+  2. A PPAP Dimensional Comparison Table in Markdown format with EXACTLY 4 columns in this order:
+
+  | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value |
+
+  The number of rows in the table must equal the number of ballooned dimensions in the **Customer Drawing**.
+  If a corresponding dimension or balloon is not found in the **Production Drawing**, leave the PD columns blank.
+
+    instructions: 
+      - "Customer Balloon ID" and "Customer Dimension Value" must be extracted **only from the Customer Drawing (CD)**.
+      - "Production Balloon ID" and "Production Dimension Value" must be extracted **only from the Production Drawing (PD)**.
+      - There are dimensions referred by circles in this image, each circle has number inside it which correspond to a dimension. 
+      - These circles are called Balloons.
+      - Balloons are numbered circles next to dimensions in the drawings.
+      - Balloon IDs in CD and PD do not need to match — map based on the feature, not the ID.
+      - DO NOT hallucinate balloon IDs or dimensions; extract them exactly as shown in each drawing.
+      - Every dimension and balloon present in the **Customer Drawing** MUST be included — this is the primary requirement.
+      - Match each CD dimension to the corresponding feature/dimension in the PD.
+      - If a CD dimension has no match in the PD, leave the PD fields empty in that row.
+
+    formatting_guidelines:
+      - Present the comparison in Markdown table format.
+      - Include units, tolerances, and GD&T symbols exactly as shown in each respective drawing.
+      - Maintain formatting consistency across all rows.
+      - Group dimensions by feature type (e.g., holes, threads, edges, angles) where possible.
+
+    visual_analysis_focus:
+      - Pay attention to the location and context of dimensions, not just numeric values.
+      - Compare how the same feature may be dimensioned differently between CD and PD.
+      - Analyze any GD&T annotations and reflect their significance.
+      - Emphasize critical or key characteristics when present.
+
+    example_row:
+      - | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value |
+      - |---------------------|--------------------------|------------------------|-----------------------------|
+      - | 12                  | Ø10.00 ±0.03 mm          | 18                     | Ø10.01 ±0.02 mm             |
+      - | 13                  | M8 x 1 - 6H              |                        |                             |
+
+    final_note: >
+      Ensure accurate mapping of dimensions and balloon IDs between drawings. Each row must reflect a clear,
+      evidence-based match from the Customer Drawing to the Production Drawing. Double-check your mappings before final submission.
+
+dim_cd_pd_ip_prompt: |
+  Compare the Customer Drawing (CD), Production Drawing (PD), and IP Measurement Table (IP) and produce:
+
+  1. A brief summary of your findings and observations.
+  2. A PPAP Dimensional Comparison Table in Markdown format with EXACTLY 9 columns in this specific order:
+
+     | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value | IP Measurement 1 | IP Measurement 2 | IP Measurement 3 | IP Measurement 4 | IP Measurement 5 |
+
+  The number of rows in the table must equal the number of ballooned dimensions in the **Customer Drawing**.
+  If a corresponding value is not available in the **Production Drawing** or **IP Table**, leave the respective columns blank.
+
+  instructions:
+    - "Customer Balloon ID" and "Customer Dimension Value" must be extracted **only from the Customer Drawing (CD)**.
+    - "Production Balloon ID" and "Production Dimension Value" must be extracted **only from the Production Drawing (PD)**.
+    - IP Measurements 1–5 must be extracted **only from the IP Measurement Table (IP)**.
+    - There are dimensions referred by circles in the drawings; each circle has a number inside — these are called Balloon IDs.
+    - Balloons are numbered circles next to dimensions. Do not hallucinate balloon IDs or dimension values.
+    - All ballooned dimensions from the **Customer Drawing** must be included — this is the primary requirement.
+    - If a CD dimension has no match in the PD, leave the PD fields empty.
+    - If a dimension has fewer than 5 IP measurements, leave the extra cells blank.
+    - Match features logically across all three sources based on location, context, and dimension value — not necessarily on ID.
+
+  formatting_guidelines:
+    - Present the comparison in Markdown table format with clear headers.
+    - Maintain exact values, units, tolerances, and GD&T symbols as shown in each source.
+    - Keep consistent formatting and grouping of features (e.g., holes, edges, threads).
+    - Use empty cells for missing data — do not use "N/A", "None", or placeholders.
+
+  visual_analysis_focus:
+    - Compare the same feature across CD, PD, and IP — note how it’s dimensioned or measured differently.
+    - Emphasize any variations in values, tolerances, or measurement deviations.
+    - Respect GD&T annotations and reflect their importance in the summary if applicable.
+    - Identify and highlight any critical/key characteristics marked in any document.
+
+  example_row:
+    - | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value | IP Measurement 1 | IP Measurement 2 | IP Measurement 3 | IP Measurement 4 | IP Measurement 5 |
+    - |---------------------|--------------------------|------------------------|-----------------------------|------------------|------------------|------------------|------------------|------------------|
+    - | 12                  | Ø10.00 ±0.03 mm          | 18                     | Ø10.01 ±0.02 mm             | 9.98             | 10.01            | 10.00            | 10.02            | 9.99             |
+    - | 13                  | M8 x 1 - 6H              |                        |                             |                  |                  |                  |                  |                  |
+
+  final_note: >
+    - Ensure precise, evidence-based mapping of features across the Customer Drawing, Production Drawing, and IP Table.
+    - Your output should be comprehensive, compliant with PPAP standards, and suitable for engineering and quality review.
+    - Double-check all associations and maintain a clear, consistent format throughout the table.
+
+dim_cd_pd_ip_tile_prompt: |
+  Compare the Customer Drawing (CD), Production Drawing (PD), and IP Measurement Table (IP) to produce:
+
+  1. A brief summary of your findings and observations.
+  2. A PPAP Dimensional Comparison Table in Markdown format with EXACTLY 9 columns in this order:
+
+    | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value | IP Measurement 1 | IP Measurement 2 | IP Measurement 3 | IP Measurement 4 | IP Measurement 5 |
+
+  The source information from CD and PD will be provided in tabular format with the following schema:
+     - S No
+     - Dimension
+     - Associated Tolerance
+     - Balloon ID
+
+  The number of rows in the final table must equal the number of ballooned dimensions in the **Customer Drawing (CD)**.
+
+  instructions:
+    - For each **Customer Balloon ID**, identify the matching feature in the **Production Drawing (PD)** using the dimension and tolerance (not necessarily the same Balloon ID).
+    - Extract the **Production Balloon ID** and **Production Dimension Value** corresponding to the matched feature from PD.
+    - Then, use the **Production Balloon ID** to look up matching measurements in the **IP Measurement Table (IP)**.
+    - Do **not fabricate or hallucinate** any Balloon IDs, dimensions, or measurements. If a match is not found at any stage, leave the corresponding fields blank.
+    - Include all ballooned dimensions from the **Customer Drawing** — this is mandatory.
+
+  formatting_guidelines:
+    - Present the comparison in **Markdown table** format with exactly 7 columns as shown.
+    - Include units, tolerances, and GD&T symbols exactly as specified in each respective source.
+    - Maintain consistent formatting and precision across all rows.
+    - Use empty cells (not "N/A" or "None") for missing values.
+    - Do not reorder rows — maintain CD balloon order.
+
+  visual_mapping_guidelines:
+    - Focus on the dimensional intent and feature correspondence, not the balloon numbers alone.
+    - Ensure mappings are feature-based: match the same feature across CD, PD, and IP even if represented differently.
+    - Note variations in GD&T notation or tolerances and reflect them in the summary if significant.
+
+  example_row:
+    - | Customer Balloon ID | Customer Dimension Value | Production Balloon ID | Production Dimension Value | IP Measurement 1 | IP Measurement 2 | IP Measurement 3 | IP Measurement 4 | IP Measurement 5 |
+    - |---------------------|--------------------------|------------------------|-----------------------------|------------------|------------------|------------------|------------------|------------------|
+    - | 7                   | Ø8.00 ±0.05 mm           | 12                     | Ø8.01 ±0.02 mm              | 8.02             | 8.00             | 8.01             | 8.00             | 8.03             |
+    - | 8                   | M6 x 1 - 6H              |                        |                             |                  |                  |                  |                  |                  |
+
+  final_note: >
+    - Each row should represent a complete, evidence-based mapping from Customer Drawing to Production Drawing to IP Measurement.
+    - Prioritize accuracy and traceability of dimension matching for compliance and audit purposes.
+    - Avoid speculative mapping — match based on geometric intent and visible annotations only.
+    - Along with the PPAP Dimensional Comparison Table, return Customer Drawing (CD) Table and Production Drawing (PD) Table provided in the input as it is.
+
+  input_tables:
+    - Customer Drawing (CD) Table : $cd_pdf
+    - Production Drawing (PD) Table: $pd_pdf
+    - IP Measurement Table (IP): $ip_pdf
